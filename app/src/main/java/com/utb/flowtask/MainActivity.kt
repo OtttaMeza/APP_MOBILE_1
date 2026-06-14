@@ -9,43 +9,58 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import com.utb.flowtask.auth.AuthState
+import com.utb.flowtask.auth.AuthViewModel
 import com.utb.flowtask.ui.screens.FormScreen
+import com.utb.flowtask.ui.screens.LoginScreen
 import com.utb.flowtask.ui.screens.MainScreen
+import com.utb.flowtask.ui.screens.MapScreen
 import com.utb.flowtask.ui.theme.FlowTaskTheme
 import com.utb.flowtask.viewmodel.TaskViewModel
 
-// Definición de las pantallas disponibles
 enum class Screen {
-    MAIN, FORM
+    LOGIN, MAIN, FORM, MAP
 }
 
 class MainActivity : ComponentActivity() {
-    // Inicialización del ViewModel que sobrevive a cambios de configuración
-    private val viewModel: TaskViewModel by viewModels()
+
+    private val taskViewModel: TaskViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             FlowTaskTheme {
-                // Estado de navegación guardable para mantener la pantalla activa al rotar el dispositivo
-                var currentScreen by rememberSaveable { mutableStateOf(Screen.MAIN) }
+                val authState by authViewModel.authState.collectAsState()
+                var currentScreen by rememberSaveable { mutableStateOf(Screen.LOGIN) }
 
-                Surface(
-                    modifier = Modifier.fillMaxSize()
-                ) {
+                // Cuando el estado de auth cambia, redirigir automáticamente
+                LaunchedEffect(authState) {
+                    when (authState) {
+                        is AuthState.Authenticated -> {
+                            if (currentScreen == Screen.LOGIN) currentScreen = Screen.MAIN
+                        }
+                        is AuthState.Idle -> currentScreen = Screen.LOGIN
+                        else -> Unit
+                    }
+                }
+
+                Surface(modifier = Modifier.fillMaxSize()) {
                     when (currentScreen) {
-                        Screen.MAIN -> {
-                            MainScreen(
-                                onNavigateToForm = { currentScreen = Screen.FORM },
-                                viewModel = viewModel
-                            )
-                        }
-                        Screen.FORM -> {
-                            FormScreen(
-                                onNavigateToMain = { currentScreen = Screen.MAIN },
-                                viewModel = viewModel
-                            )
-                        }
+                        Screen.LOGIN -> LoginScreen(authViewModel = authViewModel)
+                        Screen.MAIN -> MainScreen(
+                            onNavigateToForm = { currentScreen = Screen.FORM },
+                            onNavigateToMap = { currentScreen = Screen.MAP },
+                            onLogout = { authViewModel.logout() },
+                            viewModel = taskViewModel
+                        )
+                        Screen.FORM -> FormScreen(
+                            onNavigateToMain = { currentScreen = Screen.MAIN },
+                            viewModel = taskViewModel
+                        )
+                        Screen.MAP -> MapScreen(
+                            onNavigateBack = { currentScreen = Screen.MAIN }
+                        )
                     }
                 }
             }

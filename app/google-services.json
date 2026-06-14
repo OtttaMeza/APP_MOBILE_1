@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "787158476734",
+    "project_id": "test-app-d6598",
+    "storage_bucket": "test-app-d6598.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:787158476734:android:31ccf6516a4113e1fb7bef",
+        "android_client_info": {
+          "package_name": "com.utb.flowtask"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMWcolnAVK0aiLz95fBbmX2alFE-cBDNc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

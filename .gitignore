@@ -1,0 +1,27 @@
+# Android build artifacts
+*.iml
+.gradle/
+local.properties
+.idea/
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+build/
+app/build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Google Services (contiene claves, no commitear si repo es público)
+# google-services.json
+
+# Keystore
+*.jks
+*.keystore
+
+# OS
+.DS_Store
+Thumbs.db

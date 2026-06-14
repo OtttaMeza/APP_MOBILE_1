@@ -6,10 +6,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -22,6 +30,8 @@ import com.utb.flowtask.viewmodel.TaskViewModel
 @Composable
 fun MainScreen(
     onNavigateToForm: () -> Unit,
+    onNavigateToMap: () -> Unit,
+    onLogout: () -> Unit,
     viewModel: TaskViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -29,6 +39,33 @@ fun MainScreen(
     val completedCount = tasks.count { it.isCompleted }
     val totalCount = tasks.size
     val progress = if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
+    var mostrarConfirmacionLogout by remember { mutableStateOf(false) }
+
+    if (mostrarConfirmacionLogout) {
+        AlertDialog(
+            onDismissRequest = { mostrarConfirmacionLogout = false },
+            title = { Text("Cerrar sesión", fontWeight = FontWeight.Bold) },
+            text = { Text("¿Estás seguro de que deseas cerrar la sesión?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        mostrarConfirmacionLogout = false
+                        onLogout()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Sí, cerrar sesión")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { mostrarConfirmacionLogout = false }) {
+                    Text("No, cancelar")
+                }
+            }
+        )
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -40,6 +77,26 @@ fun MainScreen(
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold
                     )
+                },
+                actions = {
+                    IconButton(
+                        onClick = onNavigateToMap,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Ver mi ubicación"
+                        )
+                    }
+                    IconButton(
+                        onClick = { mostrarConfirmacionLogout = true },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ExitToApp,
+                            contentDescription = "Cerrar sesión"
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -67,11 +124,13 @@ fun MainScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-            // Tarjeta de estadísticas de progreso
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 8.dp)
+                    .semantics {
+                        contentDescription = "$completedCount de $totalCount tareas completadas, ${(progress * 100).toInt()}%"
+                    },
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -130,7 +189,6 @@ fun MainScreen(
                 modifier = Modifier.padding(vertical = 4.dp)
             )
 
-            // Lista de tareas o estado vacío
             if (tasks.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -165,7 +223,7 @@ fun MainScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(bottom = 80.dp) // Para no tapar con el FAB
+                    contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     items(tasks, key = { it.id }) { task ->
                         TaskCard(
